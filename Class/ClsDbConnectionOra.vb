@@ -10,6 +10,7 @@ Public Class ClsDbConnectionOra
     Public ConDbUCSAppsx As OracleConnection = New OracleConnection("Data Source=(DESCRIPTION= (ADDRESS = (PROTOCOL = TCP)(HOST =localhost) (PORT = 1521))(CONNECT_DATA = (SERVER = dedicated)(SERVICE_NAME = XE)));User ID=SYS;Password=sys;")
     Public ConDbLocalOra As OracleConnection = New OracleConnection("Data Source=localhost:1521/XE;User ID=DBPRD;Password=dbprd;")
     Public ConDbAPEX_APP As OracleConnection = New OracleConnection("Data Source=172.16.15.44:1521/PDBAPEX;User ID=APEX_APP;Password=Apex321;")
+    Public ConDbWh As OracleConnection = New OracleConnection("Data Source=192.168.24.47:1521/WHDB;User ID=AD_WHDB;Password=gtm_WHdb_585;")
 
     Private ObjUseFulFunctions As ClsUseFulFunctions = New ClsUseFulFunctions
     Public Async Function ExecuteOraQueryReturnTableAsync(ByVal Query As String, ByVal DbConn As OracleConnection) As Task(Of DataTable)
@@ -143,6 +144,23 @@ Public Class ClsDbConnectionOra
 
         Return dt
     End Function
+
+    Public Sub ExecuteOraInsertWithParams(ByVal conn As OracleConnection, ByVal query As String, ByVal parameters As Dictionary(Of String, Object))
+        Try
+
+            Using cmd As New OracleCommand(query, conn)
+                For Each kvp In parameters
+                    cmd.Parameters.Add(New OracleParameter(kvp.Key, kvp.Value))
+                Next
+                cmd.ExecuteNonQuery()
+            End Using
+
+        Catch ex As Exception
+            MsgBox($"Error in ExecuteOraInsertWithParams: {ex.Message}{vbCrLf}", MsgBoxStyle.Critical)
+            ObjUseFulFunctions.LogUnhandledError($"ExecuteOraInsertWithParams {ex.Message} {vbCrLf} {query}")
+            Throw
+        End Try
+    End Sub
 
     Public Sub ExecuteOraNonQueryWithParam(ByVal Query As String, ByVal dbConn As OracleConnection, ByVal paramNames As String(), ByVal paramValues As String())
         Dim Connection As OracleConnection = New OracleConnection(dbConn.ConnectionString)
